@@ -1,4 +1,4 @@
-# excel-to-strigs
+# excel-to-strings
 
 Convert from excel to string file for iOS/Android/WEB/Etc...
 

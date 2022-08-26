@@ -1,6 +1,6 @@
-(ns excel-to-strigs.core-test
+(ns excel-to-strings.core-test
   (:require [clojure.test :refer :all]
-            [excel-to-strigs.core :refer :all]))
+            [excel-to-strings.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

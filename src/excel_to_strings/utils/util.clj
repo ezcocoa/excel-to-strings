@@ -1,4 +1,4 @@
-(ns excel-to-strigs.utils.util
+(ns excel-to-strings.utils.util
   (:use [dk.ative.docjure spreadsheet]
         [clojure.data.xml :as xml]))
 ;;
@@ -19,4 +19,6 @@
   [filename sheet columns]
   (->> (load-workbook filename)
        (select-sheet sheet)
-       (select-columns columns)))
+       (select-columns columns)
+       (remove nil?)
+       (remove #(nil? (:key %)) )))

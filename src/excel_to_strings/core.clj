@@ -1,8 +1,8 @@
-(ns excel-to-strigs.core
-  (:use [excel-to-strigs.utils.util]
+(ns excel-to-strings.core
+  (:use [excel-to-strings.utils.util]
         [clojure.data.xml :as xml])
   (:require [clojure.tools.cli :refer [parse-opts]]
-            [excel-to-strigs.config :as cfg]
+            [excel-to-strings.config :as cfg]
             [cheshire.core :refer :all])
   (:gen-class))
 

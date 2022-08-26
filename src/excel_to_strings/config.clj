@@ -1,4 +1,4 @@
-(ns excel-to-strigs.config)
+(ns excel-to-strings.config)
 ;; config
 ;;
 (defonce select-excel-file "lang.xlsx")
