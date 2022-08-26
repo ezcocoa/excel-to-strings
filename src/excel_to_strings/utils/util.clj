@@ -20,5 +20,4 @@
   (->> (load-workbook filename)
        (select-sheet sheet)
        (select-columns columns)
-       (remove nil?)
-       (remove #(nil? (:key %)) )))
+       (remove #(empty? (trim (:key %))))))

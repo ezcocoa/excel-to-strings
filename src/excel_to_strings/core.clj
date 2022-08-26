@@ -18,30 +18,32 @@
    (xml/sexp-as-element
     [:resources
      (map (fn [{:keys [key value]}]
-            (if (nil? (clojure.string/index-of value "||"))
-              [:string
-               {:name (trim key)}
-               (trim value)]
-              [:string-array {:name (trim key)}
-               (for [d (clojure.string/split value #"\|\|")]
-                 [:item d])]
-              )) 
-          (filter #(not (empty? (trim (:key %)))) strs))])))
+            [:string
+             {:name (trim key)}
+             (trim value)]
+            ;; android string-array를 위한 처리
+            ;; (if (nil? (clojure.string/index-of value "||"))
+            ;;   [:string-array {:name (trim key)}
+            ;;    (for [d (clojure.string/split value #"\|\|")]
+            ;;      [:item d])]
+            ;;   )
+            ) 
+          strs)])))
 
 (defn generate-ios-strings
   "iOS용 strings 포멧 데이터를 생성한다."
   [kvs]
   (clojure.string/join
    (map (fn [{:keys [key value]}]
-          (format "\"%s\" = \"%s\";\n" (trim key) (trim value))) 
-        (filter #(not (empty? (trim (:key %)))) kvs))))
+          (format "\"%s\" = \"%s\";\n" (trim key) (trim value)))
+        kvs)))
 
 (defn generate-json
   "WEB용 JSON 포멧 데이터를 생성한다."
   [kvs]
   (apply merge (map (fn [{:keys [key value]}]
                      {(keyword (trim key)) (trim value)}) 
-                   (filter #(not (empty? (trim (:key %)))) kvs))))
+                   kvs)))
 
 (defn write-xml!
   "XML(Android용) 파일을 생성한다."
@@ -147,7 +149,9 @@
   ;;
   ;; Load excel data.
   ;;
-  (sel-list (load-excel cfg/select-excel-file cfg/select-sheet-name cfg/select-columns) 3)
+  (-> (sel-list (load-excel cfg/select-excel-file cfg/select-sheet-name cfg/select-columns) 3)
+      prn )
+  
   ;;
   ;; generate android string file.
   ;;
