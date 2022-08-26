@@ -9,6 +9,6 @@
                  [org.clojure/tools.cli "1.0.206"]
                  [cheshire "5.11.0"]
                  ]
-  :main excel-to-strigs.core
+  :main excel-to-strings.core
   :aot :all
-  :repl-options {:init-ns excel-to-strigs.core})
+  :repl-options {:init-ns excel-to-strings.core})
