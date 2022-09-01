@@ -9,6 +9,11 @@
     (clojure.string/trim v)
     ""))
 
+(defn trim-all [v]
+  (if v
+    (clojure.string/replace (clojure.string/trim v) #" " "")
+    ""))
+
 (defn sel-list [l sr]
   (if (<= sr 1)
     l
