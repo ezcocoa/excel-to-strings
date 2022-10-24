@@ -3,7 +3,8 @@
         [clojure.data.xml :as xml])
   (:require [clojure.tools.cli :refer [parse-opts]]
             [excel-to-strings.config :as cfg]
-            [cheshire.core :refer :all])
+            [cheshire.core :refer :all]
+            [camel-snake-kebab.core :as csk])
   (:gen-class))
 
 ;;
@@ -20,7 +21,8 @@
      (map (fn [{:keys [key value]}]
             [:string
              {:name (trim key)}
-             (trim value)]
+             (-> (trim value)
+                 (clojure.string/replace "%d" "%s"))]
             ;; android string-array를 위한 처리
             ;; (if (nil? (clojure.string/index-of value "||"))
             ;;   [:string-array {:name (trim key)}
@@ -32,10 +34,12 @@
 
 (defn generate-ios-strings
   "iOS용 strings 포멧 데이터를 생성한다."
-  [kvs]
+  [kvs prefix]
   (clojure.string/join
    (map (fn [{:keys [key value]}]
-          (format "\"%s\" = \"%s\";\n" (trim key) (trim value)))
+          (format "\"%s\" = \"%s%s\";\n" (trim key) prefix (-> (trim value)
+                                                               (clojure.string/replace "%d" "%@")
+                                                               (clojure.string/replace "%s" "%@"))))
         kvs)))
 
 (defn generate-json
@@ -119,21 +123,41 @@
   (let [{:keys [options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
-      (let [filename (:file options)
-            ouput_path (java.io.File. "output")]
+      (do
+        ;;; 폴더 생성
+        (loop [output_paths ["output"
+                             "output/en.lproj"
+                             "output/ko.lproj"]]
+          (when (seq output_paths)
+            (let [output_file (java.io.File. (first output_paths))]
+              (when (not (. output_file exists))
+                (.mkdir output_file))
+              (recur (rest output_paths)))))
 
-        ;; 폴더가 없을 경우 생성
-        (when (not (. ouput_path exists))
-          (.mkdir ouput_path))
+        ;; 왜 'for'은 동작하지 않지?
+        ;; (for [output_path ["output"
+        ;;                    "output/en.lproj"
+        ;;                    "output/ko.lproj"]]
+        ;;   (let [output_file (java.io.File. output_path)]
+        ;;     (println output_file)
+        ;;     (when (not (. output_file exists))
+        ;;       (println (.mkdir output_file)))
+        ;;     ))
 
-        (let [kvs (sel-list (load-excel filename cfg/select-sheet-name cfg/select-columns) cfg/select-start-row)
+        ;;; 변환
+        (let [kvs (sel-list (load-excel (:file options) cfg/select-sheet-name cfg/select-columns) cfg/select-start-row)
               aos_data (generate-android-strings-xml kvs)
-              ios_data (generate-ios-strings kvs)
+              ios_ko_data (generate-ios-strings kvs "")
+              ios_en_data (generate-ios-strings kvs "[ENG] ")
               web_data (generate-json kvs)]
 
-          (let [file cfg/output-ios-file]
-            (write-file! file ios_data)
-            (println (format "iOS용 [%s] 파일이 생성되었습니다." file)))
+          (let [file cfg/output-ios-en-file]
+            (write-file! file ios_en_data)
+            (println (format "iOS용 [%s] en 파일이 생성되었습니다." file)))
+
+          (let [file cfg/output-ios-ko-file]
+            (write-file! file ios_ko_data)
+            (println (format "iOS용 [%s] ko 파일이 생성되었습니다." file)))
 
           (let [file cfg/output-android-file]
             (write-file! file aos_data)
@@ -141,8 +165,8 @@
 
           (let [file cfg/output-web-file]
             (write-file-stream! file web_data)
-            (println (format "WEB용 [%s] 파일이 생성되었습니다." file)))
-          )))))
+            (println (format "WEB용 [%s] 파일이 생성되었습니다." file)))))
+      )))
 
 (comment
   ;; TEST CODE

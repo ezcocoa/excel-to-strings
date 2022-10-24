@@ -8,7 +8,7 @@
                  [org.clojure/data.xml "0.0.8"]
                  [org.clojure/tools.cli "1.0.206"]
                  [cheshire "5.11.0"]
-                 ]
+                 [camel-snake-kebab "0.4.3"]]
   :main excel-to-strings.core
   :aot :all
   :repl-options {:init-ns excel-to-strings.core})

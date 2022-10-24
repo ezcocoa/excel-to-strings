@@ -6,5 +6,6 @@
 (defonce select-columns {:C :key :E :value})
 (defonce select-start-row 3)
 (defonce output-android-file "output/strings.xml")
-(defonce output-ios-file "output/Localizable.strings")
+(defonce output-ios-en-file "output/en.lproj/Localizable.strings")
+(defonce output-ios-ko-file "output/ko.lproj/Localizable.strings")
 (defonce output-web-file "output/strings.json")
