@@ -146,27 +146,41 @@
 
         ;;; 변환
         (let [kvs (sel-list (load-excel (:file options) cfg/select-sheet-name cfg/select-columns) cfg/select-start-row)
-              aos_data (generate-android-strings-xml kvs)
-              ios_ko_data (generate-ios-strings kvs "")
-              ios_en_data (generate-ios-strings kvs "[ENG] ")
-              web_data (generate-json kvs)]
+              duplicated_kvs (->> kvs
+                                  (group-by :key)
+                                  (map (fn [[k v]] 
+                                         {:key k :count (count v)}))
+                                  (filter (fn [x]
+                                            (> (:count x) 1))))]
+          (if (empty? duplicated_kvs)
+            (let [aos_data (generate-android-strings-xml kvs)
+                  ios_ko_data (generate-ios-strings kvs "")
+                  ios_en_data (generate-ios-strings kvs "[ENG] ")
+                  web_data (generate-json kvs)]
 
-          (let [file cfg/output-ios-en-file]
-            (write-file! file ios_en_data)
-            (println (format "iOS용 [%s] en 파일이 생성되었습니다." file)))
+              (let [file cfg/output-ios-en-file]
+                (write-file! file ios_en_data)
+                (println (format "iOS용 [%s] en 파일이 생성되었습니다." file)))
 
-          (let [file cfg/output-ios-ko-file]
-            (write-file! file ios_ko_data)
-            (println (format "iOS용 [%s] ko 파일이 생성되었습니다." file)))
+              (let [file cfg/output-ios-ko-file]
+                (write-file! file ios_ko_data)
+                (println (format "iOS용 [%s] ko 파일이 생성되었습니다." file)))
 
-          (let [file cfg/output-android-file]
-            (write-file! file aos_data)
-            (println (format "Android용 [%s] 파일이 생성되었습니다." file)))
+              (let [file cfg/output-android-file]
+                (write-file! file aos_data)
+                (println (format "Android용 [%s] 파일이 생성되었습니다." file)))
 
-          (let [file cfg/output-web-file]
-            (write-file-stream! file web_data)
-            (println (format "WEB용 [%s] 파일이 생성되었습니다." file)))))
-      )))
+              (let [file cfg/output-web-file]
+                (write-file-stream! file web_data)
+                (println (format "WEB용 [%s] 파일이 생성되었습니다." file))))
+
+            (loop [l duplicated_kvs]
+              (when (seq l)
+                (let [d (first l)
+                      key (:key d)
+                      count (:count d)]
+                  (println (format "'%s'값이 %d개 존재합니다." key count))
+                  (recur (rest l)))))))))))
 
 (comment
   ;; TEST CODE
