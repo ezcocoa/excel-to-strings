@@ -15,12 +15,15 @@
 (defn replace-aos-format
   "AOS용 포멧 스트링으로 변환한다."
   [s]
-  (apply str (loop [l (clojure.string/split s #"%s")
-                    idx 1
-                    r []]
-               (if (seq l)
-                 (recur (rest l) (inc idx) (conj r (first l) (str "%" idx "$s")))
-                 r))))
+  (let [ll (clojure.string/split (str s " ") #"%s")]
+    (if (= (count ll) 1)
+      s
+      (trim (clojure.string/join (loop [l ll
+                                        idx 1
+                                        r []]
+                                   (if (= (count l) 1)
+                                     r
+                                     (recur (rest l) (inc idx) (conj r (first l) (str "%" idx "$s"))))))))))
 
 (defn generate-android-strings-xml
   "Android strings xml 파일 포멧 데이터를 생성한다."
