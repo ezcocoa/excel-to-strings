@@ -12,6 +12,16 @@
 ;; [iOS Localization][https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPInternational/LocalizingYourApp/LocalizingYourApp.html]
 ;;
 
+(defn replace-aos-format
+  "AOS용 포멧 스트링으로 변환한다."
+  [s]
+  (apply str (loop [l (clojure.string/split s #"%s")
+                    idx 1
+                    r []]
+               (if (seq l)
+                 (recur (rest l) (inc idx) (conj r (first l) (str "%" idx "$s")))
+                 r))))
+
 (defn generate-android-strings-xml
   "Android strings xml 파일 포멧 데이터를 생성한다."
   [strs]
@@ -22,7 +32,8 @@
             [:string
              {:name (trim key)}
              (-> (trim value)
-                 (clojure.string/replace "%d" "%s"))]
+                 (clojure.string/replace "%d" "%s")
+                 (replace-aos-format))]
             ;; android string-array를 위한 처리
             ;; (if (nil? (clojure.string/index-of value "||"))
             ;;   [:string-array {:name (trim key)}

@@ -1,18 +1,22 @@
 # excel-to-strings
 
-Convert from excel to string file for iOS/Android/WEB/Etc...
+Convert from excel to string file for iOS/Android/WEB
+
+* iOS : en.lproj, ko.lproj
+* Android : strings.xml
+* WEB : strings.json
 
 ## Usage
 
-lein run 
+`lein run`
 
 or
 
-java -jar project.jar
+`java -jar excel-to-strings.jar lang.xlsx`
 
 ## License
 
-Copyright © 2022 FIXME
+Copyright © 2022 ezcocoa
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
