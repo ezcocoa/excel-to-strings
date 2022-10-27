@@ -168,7 +168,7 @@
           (if (empty? duplicated_kvs)
             (let [aos_data (generate-android-strings-xml kvs)
                   ios_ko_data (generate-ios-strings kvs "")
-                  ios_en_data (generate-ios-strings kvs "[ENG] ")
+                  ios_en_data (generate-ios-strings kvs "🇺🇸")
                   web_data (generate-json kvs)]
 
               (let [file cfg/output-ios-en-file]
