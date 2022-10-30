@@ -1,5 +1,5 @@
 (ns excel-to-strings.core
-  (:use [excel-to-strings.utils.util]
+  (:use [excel-to-strings.utils.util :as util]
         [clojure.data.xml :as xml])
   (:require [clojure.tools.cli :refer [parse-opts]]
             [excel-to-strings.config :as cfg]
@@ -26,14 +26,14 @@
 
 (defn generate-android-strings-xml
   "Android strings xml 파일 포멧 데이터를 생성한다."
-  [strs]
+  [kvs prefix]
   (indent-str
    (xml/sexp-as-element
     [:resources
      (map (fn [{:keys [key value]}]
             [:string
              {:name (trim key)}
-             (-> (trim value)
+             (-> (str prefix (trim value))
                  (clojure.string/replace "%d" "%s")
                  (replace-aos-format))]
             ;; android string-array를 위한 처리
@@ -43,7 +43,7 @@
             ;;      [:item d])]
             ;;   )
             ) 
-          strs)])))
+          kvs)])))
 
 (defn generate-ios-strings
   "iOS용 strings 포멧 데이터를 생성한다."
@@ -57,10 +57,10 @@
 
 (defn generate-json
   "WEB용 JSON 포멧 데이터를 생성한다."
-  [kvs]
+  [kvs prefix]
   (apply merge (map (fn [{:keys [key value]}]
-                     {(keyword (trim key)) (trim value)}) 
-                   kvs)))
+                      {(keyword (trim key)) (str prefix (trim value))}) 
+                    kvs)))
 
 (defn write-xml!
   "XML(Android용) 파일을 생성한다."
@@ -130,6 +130,17 @@
   (println msg)
   (System/exit status))
 
+(defn convert-to-file
+  [kvs out-files generate-fn {:keys [purpose writer]}]
+  (loop [fs out-files]
+    (when (seq fs)
+      (let [{:keys [code prefix file]} (first fs)]
+        (if writer
+          (writer file (generate-fn kvs prefix))
+          (write-file! file (generate-fn kvs prefix)))
+        (println (format "%s용 [%s] %s 파일이 생성되었습니다." purpose file code))
+        (recur (rest fs))))))
+
 (defn -main
   "export from excel to multi-platform string files."
   [& args]
@@ -138,14 +149,11 @@
       (exit (if ok? 0 1) exit-message)
       (do
         ;;; 폴더 생성
-        (loop [output_paths ["output"
-                             "output/en.lproj"
-                             "output/ko.lproj"]]
-          (when (seq output_paths)
-            (let [output_file (java.io.File. (first output_paths))]
-              (when (not (. output_file exists))
-                (.mkdir output_file))
-              (recur (rest output_paths)))))
+        (let [folders (concat
+                       (map #(:file %) cfg/output-ios-files)
+                       (map #(:file %) cfg/output-android-files)
+                       (map #(:file %) cfg/output-web-files))]
+          (util/make-folders folders))
 
         ;; 왜 'for'은 동작하지 않지?
         ;; (for [output_path ["output"
@@ -166,26 +174,13 @@
                                   (filter (fn [x]
                                             (> (:count x) 1))))]
           (if (empty? duplicated_kvs)
-            (let [aos_data (generate-android-strings-xml kvs)
-                  ios_ko_data (generate-ios-strings kvs "")
-                  ios_en_data (generate-ios-strings kvs "🇺🇸")
-                  web_data (generate-json kvs)]
-
-              (let [file cfg/output-ios-en-file]
-                (write-file! file ios_en_data)
-                (println (format "iOS용 [%s] en 파일이 생성되었습니다." file)))
-
-              (let [file cfg/output-ios-ko-file]
-                (write-file! file ios_ko_data)
-                (println (format "iOS용 [%s] ko 파일이 생성되었습니다." file)))
-
-              (let [file cfg/output-android-file]
-                (write-file! file aos_data)
-                (println (format "Android용 [%s] 파일이 생성되었습니다." file)))
-
-              (let [file cfg/output-web-file]
-                (write-file-stream! file web_data)
-                (println (format "WEB용 [%s] 파일이 생성되었습니다." file))))
+            (do
+              (convert-to-file kvs cfg/output-ios-files generate-ios-strings {:purpose "iOS"
+                                                                              :writer nil})
+              (convert-to-file kvs cfg/output-android-files generate-android-strings-xml {:purpose "Android"
+                                                                                          :writer nil})
+              (convert-to-file kvs cfg/output-web-files generate-json {:purpose "WEB"
+                                                                       :writer write-file-stream!}))
 
             (loop [l duplicated_kvs]
               (when (seq l)

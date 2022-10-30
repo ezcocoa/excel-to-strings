@@ -1,4 +1,4 @@
-(defproject excel-to-strings "0.1.5"
+(defproject excel-to-strings "0.1.6"
   :description "다국어 변환 툴입니다. (excel to multi-platform language file.)"
   :url "http://example.com/FIXME"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
