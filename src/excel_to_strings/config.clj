@@ -8,10 +8,10 @@
 
 (defonce output-android-files [{:code "en"
                                 :prefix "🇺🇸"
-                                :file "output/values/strings.xml"}
+                                :file "output/android/values/strings.xml"}
                                {:code "ko"
                                 :prefix ""
-                                :file "output/values-ko/strings.xml"}
+                                :file "output/android/values-ko/strings.xml"}
                                ])
 
 (defonce output-ios-files [{:code "en"
