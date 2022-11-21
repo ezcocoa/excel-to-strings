@@ -147,48 +147,55 @@
   (let [{:keys [options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
-      (do
-        ;;; 폴더 생성
-        (let [folders (concat
-                       (map #(:file %) cfg/output-ios-files)
-                       (map #(:file %) cfg/output-android-files)
-                       (map #(:file %) cfg/output-web-files))]
-          (util/make-folders folders))
+      (try
+        (if-let [ed (load-excel (:file options) cfg/select-sheet-name cfg/select-columns)]
+          ;; 데이터를 정상적으로 불러왔을 경우...
+          (let [kvs (sel-list ed cfg/select-start-row)
+                duplicated_kvs (->> kvs
+                                    (group-by :key)
+                                    (map (fn [[k v]] 
+                                           {:key k :count (count v)}))
+                                    (filter (fn [x]
+                                              (> (:count x) 1))))]
+            ;; 폴더 생성
+            (let [folders (concat
+                           (map #(:file %) cfg/output-ios-files)
+                           (map #(:file %) cfg/output-android-files)
+                           (map #(:file %) cfg/output-web-files))]
+              (util/make-folders folders))
 
-        ;; 왜 'for'은 동작하지 않지?
-        ;; (for [output_path ["output"
-        ;;                    "output/en.lproj"
-        ;;                    "output/ko.lproj"]]
-        ;;   (let [output_file (java.io.File. output_path)]
-        ;;     (println output_file)
-        ;;     (when (not (. output_file exists))
-        ;;       (println (.mkdir output_file)))
-        ;;     ))
+            ;; 왜 'for'은 동작하지 않지?
+            ;; (for [output_path ["output"
+            ;;                    "output/en.lproj"
+            ;;                    "output/ko.lproj"]]
+            ;;   (let [output_file (java.io.File. output_path)]
+            ;;     (println output_file)
+            ;;     (when (not (. output_file exists))
+            ;;       (println (.mkdir output_file)))
+            ;;     ))
 
-        ;;; 변환
-        (let [kvs (sel-list (load-excel (:file options) cfg/select-sheet-name cfg/select-columns) cfg/select-start-row)
-              duplicated_kvs (->> kvs
-                                  (group-by :key)
-                                  (map (fn [[k v]] 
-                                         {:key k :count (count v)}))
-                                  (filter (fn [x]
-                                            (> (:count x) 1))))]
-          (if (empty? duplicated_kvs)
-            (do
-              (convert-to-file kvs cfg/output-ios-files generate-ios-strings {:purpose "iOS"
-                                                                              :writer nil})
-              (convert-to-file kvs cfg/output-android-files generate-android-strings-xml {:purpose "Android"
-                                                                                          :writer nil})
-              (convert-to-file kvs cfg/output-web-files generate-json {:purpose "WEB"
-                                                                       :writer write-file-stream!}))
 
-            (loop [l duplicated_kvs]
-              (when (seq l)
-                (let [d (first l)
-                      key (:key d)
-                      count (:count d)]
-                  (println (format "'%s'값이 %d개 존재합니다." key count))
-                  (recur (rest l)))))))))))
+            (if (empty? duplicated_kvs)
+              (do
+                (convert-to-file kvs cfg/output-ios-files generate-ios-strings {:purpose "iOS"
+                                                                                :writer nil})
+                (convert-to-file kvs cfg/output-android-files generate-android-strings-xml {:purpose "Android"
+                                                                                            :writer nil})
+                (convert-to-file kvs cfg/output-web-files generate-json {:purpose "WEB"
+                                                                         :writer write-file-stream!}))
+
+              (loop [l duplicated_kvs]
+                (when (seq l)
+                  (let [d (first l)
+                        key (:key d)
+                        count (:count d)]
+                    (println (format "'%s'값이 %d개 존재합니다." key count))
+                    (recur (rest l)))))))
+
+          ;; 데이터를 정상적으로 불러오지 못했을 경우
+          (println "엑셀 데이터를 불러오지 못했습니다."))
+        (catch Exception e
+          (println (format "엑셀 데이터를 불러오는 중 문제가 발생하였습니다.\n(%s)" (. e getMessage))))))))
 
 (comment
   ;; TEST CODE
