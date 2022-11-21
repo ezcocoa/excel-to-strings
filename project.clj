@@ -1,4 +1,4 @@
-(defproject excel-to-strings "0.1.7"
+(defproject excel-to-strings "0.1.8"
   :description "다국어 변환 툴입니다. (excel to multi-platform language file.)"
   :url "https://ezcocoa.com"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
