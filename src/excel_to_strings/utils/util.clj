@@ -1,6 +1,8 @@
 (ns excel-to-strings.utils.util
-  (:use [dk.ative.docjure spreadsheet]
-        [clojure.data.xml :as xml]))
+  (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]
+            [clojure.data.xml :as xml])
+  (:use [dk.ative.docjure spreadsheet]))
 ;;
 ;; utils
 ;;
@@ -34,3 +36,9 @@
     (when (seq output_paths)
       (clojure.java.io/make-parents (first output_paths))
       (recur (rest output_paths)))))
+
+(defn get-config
+  ([] (get-config "config.edn"))
+  ([filename]
+   (if (.exists (new java.io.File filename))
+     (edn/read-string (slurp filename)) {})))
