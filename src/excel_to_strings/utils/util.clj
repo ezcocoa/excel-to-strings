@@ -22,7 +22,10 @@
     (sel-list (rest l) (dec sr))))
 
 (defn load-excel
-  "엑셀 파일에 지정된 sheet 정보를 읽어온다."
+  "엑셀 파일에 지정된 sheet 정보를 읽어온다.
+  filename: 파일 전체 패스
+  sheet: 시트 이름
+  columns: 분석할 컬럼"
   [filename sheet columns]
   (->> (load-workbook filename)
        (select-sheet sheet)

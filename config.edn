@@ -1,0 +1,9 @@
+{
+ :file_name "lang.xlsx"
+ :sheet_name "key 정의"
+ :key :C
+ :columns {:C :key
+           :D :ko
+           :E :en}
+ :data_index 2
+ }
